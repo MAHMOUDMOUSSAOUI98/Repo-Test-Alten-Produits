@@ -1,0 +1,1 @@
+import '@testing-library/jest-dom'; // Importe les matchers personnalisés
