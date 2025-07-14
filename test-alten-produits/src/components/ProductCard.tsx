@@ -37,10 +37,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {isAdmin && ( // Affiche les actions seulement si l'utilisateur est admin
         <CardActions sx={{ justifyContent: 'flex-end' }}>
           <Button size="small" onClick={() => onEdit(product)}>
-            Edit
+            Modifier
           </Button>
           <Button size="small" color="error" onClick={() => onDelete(product.id)}>
-            Delete
+            Supprimer
           </Button>
         </CardActions>
       )}
