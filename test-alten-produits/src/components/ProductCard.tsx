@@ -12,7 +12,7 @@ interface ProductCardProps {
   product: Product;
   isAdmin: boolean;
   onEdit: (product: Product) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id?: string) => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({

@@ -1,96 +1,70 @@
-import React, { useState } from 'react';
-import type { Product } from '../types';
-import ProductCard from './ProductCard';
-import ProductDialog from './ProductDialog';
-import { Box, Grid, Typography, Button } from '@mui/material';
+// src/components/ProductList.tsx
+import React from 'react';
+import { Box, Typography, Button } from '@mui/material';
+import type { Product } from '../types/index';
 
 interface ProductListProps {
   products: Product[];
   isAdmin: boolean;
-  onUpdateProducts: (updatedProducts: Product[]) => void; // Callback pour mettre à jour les produits
+  onDeleteProduct: (id?: string) => Promise<void>;
+  onAddProductClick: () => void;
+  onEditProductClick: (product: Product) => void;
 }
 
 const ProductList: React.FC<ProductListProps> = ({
   products,
   isAdmin,
-  onUpdateProducts,
+  onDeleteProduct,
+  onAddProductClick,
+  onEditProductClick,
 }) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
-
-  const handleEdit = (product: Product) => {
-    setSelectedProduct(product);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-      const updatedProducts = products.filter((p) => p.id !== id);
-      onUpdateProducts(updatedProducts);
-    }
-  };
-
-  const handleAddProduct = () => {
-    setSelectedProduct(undefined); // Pour un nouveau produit
-    setIsDialogOpen(true);
-  };
-
-  const handleFormSubmit = (productData: Product) => {
-    if (productData.id) {
-      // Modification d'un produit existant
-      const updatedProducts = products.map((p) =>
-        p.id === productData.id ? productData : p
-      );
-      onUpdateProducts(updatedProducts);
-    } else {
-      // Ajout d'un nouveau produit
-      const newProduct: Product = {
-        ...productData,
-        id: String(Date.now()), // Générer un ID simple (pour l'exemple)
-      };
-      onUpdateProducts([...products, newProduct]);
-    }
-  };
-
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h2" gutterBottom align="center">
-        Liste des Produits
-      </Typography>
-
       {isAdmin && (
-        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
-          <Button variant="contained" onClick={handleAddProduct}>
-            Ajouter un Produit
-          </Button>
-        </Box>
+        <Button variant="contained" onClick={onAddProductClick} sx={{ mb: 2 }}>
+          Ajouter un nouveau produit
+        </Button>
       )}
 
       {products.length === 0 ? (
-        <Typography variant="h6" align="center" color="text.secondary">
-          Aucun produit disponible.
-        </Typography>
+        <Typography>Aucun produit disponible.</Typography>
       ) : (
-        <Grid container spacing={3} justifyContent="center">
+        <Box component="ul" sx={{ listStyleType: 'none', padding: 0, margin: 0 }}>
           {products.map((product) => (
-            <Grid item  key={product.id} xs={12} sm={6} md={4} lg={3}>
-              <ProductCard
-                product={product}
-                isAdmin={isAdmin}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      )}
+            <Box
+              component="li"
+              key={product.id}
+              sx={{
+                marginBottom: '10px',
+                padding: '10px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                // Pas de flexbox sur le li lui-même ici, pour que le contenu s'empile naturellement
+              }}
+            >
+              {/* Informations du produit - elles s'afficheront en bloc, les unes sous les autres */}
+              <Typography variant="h6">{product.name}</Typography>
+              <Typography variant="body2">{product.description}</Typography>
+              <Typography variant="body1" sx={{ mb: isAdmin ? 1 : 0 }}> {/* Ajout d'une petite marge en bas si les boutons sont présents */}
+                Prix: {product.price}€
+              </Typography>
 
-      <ProductDialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        product={selectedProduct}
-        onSubmit={handleFormSubmit}
-      />
+              {/* Conteneur des boutons : Utilisez Flexbox pour les aligner à droite */}
+              {isAdmin && (
+                <Box sx={{
+                  display: 'flex',           // Active Flexbox pour ce conteneur
+                  justifyContent: 'flex-end', // Pousse les éléments (boutons) à l'extrême droite
+                  gap: 1,                    // Ajoute un petit espace entre les boutons
+                  mt: 1,                     // Ajoute une petite marge au-dessus des boutons
+                }}>
+                  <Button variant="outlined" size="small" onClick={() => onEditProductClick(product)}>Modifier</Button>
+                  <Button variant="outlined" color="error" size="small" onClick={() => onDeleteProduct(product.id)}>Supprimer</Button>
+                </Box>
+              )}
+            </Box>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 };
