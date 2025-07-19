@@ -3,7 +3,11 @@ import {
   Box,
   Typography,
   Button,
-  TextField // Importez TextField pour la barre de recherche
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import type { Product } from '../types/index';
 
@@ -24,7 +28,12 @@ const ProductList: React.FC<ProductListProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Gère le changement dans la barre de recherche
+  const [sortBy, setSortBy] = useState<string>('name-asc'); // Valeur par défaut: tri par nom croissant
+
+  const handleSortChange = (event: any) => {
+    setSortBy(event.target.value as string);
+  };
+
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
@@ -35,6 +44,23 @@ const ProductList: React.FC<ProductListProps> = ({
     product.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // --- LOGIQUE DE TRI ---
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      case 'price-asc':
+        return a.price - b.price;
+      case 'price-desc':
+        return b.price - a.price;
+      default:
+        return 0; // Aucun tri si la valeur n'est pas reconnue
+    }
+  });
+  // --- FIN LOGIQUE DE TRI ---
+
   return (
     <Box sx={{ p: 3 }}>
       {isAdmin && (
@@ -43,22 +69,41 @@ const ProductList: React.FC<ProductListProps> = ({
         </Button>
       )}
 
+      {/* Barre de Recherche */}
       <TextField
         label="Rechercher des produits"
         variant="outlined"
         fullWidth
         value={searchTerm}
         onChange={handleSearchChange}
-        sx={{ mb: 3 }} // Marge en bas pour espacer du reste
+        sx={{ mb: 3 }}
       />
 
-      {filteredProducts.length === 0 && products.length > 0 ? (
+      <FormControl fullWidth sx={{ mb: 3 }}>
+        <InputLabel id="sort-by-label">Trier par</InputLabel>
+        <Select
+          labelId="sort-by-label"
+          id="sort-by-select"
+          value={sortBy}
+          label="Trier par"
+          onChange={handleSortChange}
+        >
+          <MenuItem value="name-asc">Nom (A-Z)</MenuItem>
+          <MenuItem value="name-desc">Nom (Z-A)</MenuItem>
+          <MenuItem value="price-asc">Prix (Croissant)</MenuItem>
+          <MenuItem value="price-desc">Prix (Décroissant)</MenuItem>
+        </Select>
+      </FormControl>
+
+      {/* Logique d'affichage des produits filtrés ou des messages d'absence */}
+      {sortedProducts.length === 0 && products.length > 0 ? (
         <Typography>Aucun produit ne correspond à votre recherche.</Typography>
-      ) : filteredProducts.length === 0 && products.length === 0 ? (
+      ) : sortedProducts.length === 0 && products.length === 0 ? (
         <Typography>Aucun produit disponible.</Typography>
       ) : (
         <Box component="ul" sx={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-          {filteredProducts.map((product) => (
+          {/* Mapper sur les produits triés (sortedProducts) */}
+          {sortedProducts.map((product) => (
             <Box
               component="li"
               key={product.id}
