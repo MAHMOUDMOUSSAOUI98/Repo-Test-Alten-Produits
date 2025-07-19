@@ -1,6 +1,10 @@
-// src/components/ProductList.tsx
-import React from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import React, { useState } from 'react'; // Importez useState
+import {
+  Box,
+  Typography,
+  Button,
+  TextField // Importez TextField pour la barre de recherche
+} from '@mui/material';
 import type { Product } from '../types/index';
 
 interface ProductListProps {
@@ -18,6 +22,19 @@ const ProductList: React.FC<ProductListProps> = ({
   onAddProductClick,
   onEditProductClick,
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Gère le changement dans la barre de recherche
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
+
+  // Filtrage des produits basés sur le terme de recherche
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Box sx={{ p: 3 }}>
       {isAdmin && (
@@ -26,11 +43,22 @@ const ProductList: React.FC<ProductListProps> = ({
         </Button>
       )}
 
-      {products.length === 0 ? (
+      <TextField
+        label="Rechercher des produits"
+        variant="outlined"
+        fullWidth
+        value={searchTerm}
+        onChange={handleSearchChange}
+        sx={{ mb: 3 }} // Marge en bas pour espacer du reste
+      />
+
+      {filteredProducts.length === 0 && products.length > 0 ? (
+        <Typography>Aucun produit ne correspond à votre recherche.</Typography>
+      ) : filteredProducts.length === 0 && products.length === 0 ? (
         <Typography>Aucun produit disponible.</Typography>
       ) : (
         <Box component="ul" sx={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <Box
               component="li"
               key={product.id}
@@ -39,23 +67,20 @@ const ProductList: React.FC<ProductListProps> = ({
                 padding: '10px',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
-                // Pas de flexbox sur le li lui-même ici, pour que le contenu s'empile naturellement
               }}
             >
-              {/* Informations du produit - elles s'afficheront en bloc, les unes sous les autres */}
               <Typography variant="h6">{product.name}</Typography>
               <Typography variant="body2">{product.description}</Typography>
-              <Typography variant="body1" sx={{ mb: isAdmin ? 1 : 0 }}> {/* Ajout d'une petite marge en bas si les boutons sont présents */}
+              <Typography variant="body1" sx={{ mb: isAdmin ? 1 : 0 }}>
                 Prix: {product.price}€
               </Typography>
 
-              {/* Conteneur des boutons : Utilisez Flexbox pour les aligner à droite */}
               {isAdmin && (
                 <Box sx={{
-                  display: 'flex',           // Active Flexbox pour ce conteneur
-                  justifyContent: 'flex-end', // Pousse les éléments (boutons) à l'extrême droite
-                  gap: 1,                    // Ajoute un petit espace entre les boutons
-                  mt: 1,                     // Ajoute une petite marge au-dessus des boutons
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: 1,
+                  mt: 1,
                 }}>
                   <Button variant="outlined" size="small" onClick={() => onEditProductClick(product)}>Modifier</Button>
                   <Button variant="outlined" color="error" size="small" onClick={() => onDeleteProduct(product.id)}>Supprimer</Button>
