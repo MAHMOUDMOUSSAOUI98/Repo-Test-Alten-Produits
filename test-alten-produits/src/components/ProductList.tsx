@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Importez useState
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -10,6 +10,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import type { Product } from '../types/index';
+import ProductCard from './ProductCard'; 
 
 interface ProductListProps {
   products: Product[];
@@ -27,24 +28,21 @@ const ProductList: React.FC<ProductListProps> = ({
   onEditProductClick,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-
-  const [sortBy, setSortBy] = useState<string>('name-asc'); // Valeur par défaut: tri par nom croissant
-
-  const handleSortChange = (event: any) => {
-    setSortBy(event.target.value as string);
-  };
+  const [sortBy, setSortBy] = useState<string>('name-asc');
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
-  // Filtrage des produits basés sur le terme de recherche
+  const handleSortChange = (event: any) => {
+    setSortBy(event.target.value as string);
+  };
+
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- LOGIQUE DE TRI ---
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case 'name-asc':
@@ -56,10 +54,9 @@ const ProductList: React.FC<ProductListProps> = ({
       case 'price-desc':
         return b.price - a.price;
       default:
-        return 0; // Aucun tri si la valeur n'est pas reconnue
+        return 0;
     }
   });
-  // --- FIN LOGIQUE DE TRI ---
 
   return (
     <Box sx={{ p: 3 }}>
@@ -69,7 +66,6 @@ const ProductList: React.FC<ProductListProps> = ({
         </Button>
       )}
 
-      {/* Barre de Recherche */}
       <TextField
         label="Rechercher des produits"
         variant="outlined"
@@ -95,43 +91,20 @@ const ProductList: React.FC<ProductListProps> = ({
         </Select>
       </FormControl>
 
-      {/* Logique d'affichage des produits filtrés ou des messages d'absence */}
       {sortedProducts.length === 0 && products.length > 0 ? (
         <Typography>Aucun produit ne correspond à votre recherche.</Typography>
       ) : sortedProducts.length === 0 && products.length === 0 ? (
         <Typography>Aucun produit disponible.</Typography>
       ) : (
         <Box component="ul" sx={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-          {/* Mapper sur les produits triés (sortedProducts) */}
           {sortedProducts.map((product) => (
-            <Box
-              component="li"
+            <ProductCard
               key={product.id}
-              sx={{
-                marginBottom: '10px',
-                padding: '10px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-              }}
-            >
-              <Typography variant="h6">{product.name}</Typography>
-              <Typography variant="body2">{product.description}</Typography>
-              <Typography variant="body1" sx={{ mb: isAdmin ? 1 : 0 }}>
-                Prix: {product.price}€
-              </Typography>
-
-              {isAdmin && (
-                <Box sx={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: 1,
-                  mt: 1,
-                }}>
-                  <Button variant="outlined" size="small" onClick={() => onEditProductClick(product)}>Modifier</Button>
-                  <Button variant="outlined" color="error" size="small" onClick={() => onDeleteProduct(product.id)}>Supprimer</Button>
-                </Box>
-              )}
-            </Box>
+              product={product}
+              isAdmin={isAdmin}
+              onDeleteProduct={onDeleteProduct}
+              onEditProductClick={onEditProductClick}
+            />
           ))}
         </Box>
       )}
